@@ -2,7 +2,7 @@ import React, {ForwardedRef, useEffect, useImperativeHandle, useRef, useState} f
 
 import {EditorView, EditorState, basicSetup} from "@codemirror/basic-setup";
 import {keymap, ViewUpdate} from "@codemirror/view";
-import {Transaction} from "@codemirror/state";
+import {Transaction, Compartment} from "@codemirror/state";
 import {indentWithTab} from "@codemirror/commands";
 import {history} from "@codemirror/history";
 import {CodeMirrorTheme, EditorChange} from "./types";
@@ -10,13 +10,15 @@ import {THEMES} from "./constants";
 import {pythonCodeMirrorTheme} from "./langages/python";
 import {isDefined} from "./services/utils";
 
-interface EditorProps {initCode?: string; language?: string; appendToChangeLog: (change: EditorChange) => void}
+interface EditorProps {initCode?: string; language?: string; appendToChangeLog: (change: EditorChange) => void, readOnlyCode?: boolean}
 
-export const Editor = React.forwardRef(({initCode, language, appendToChangeLog}: EditorProps, ref: ForwardedRef<{getCode: () => string | undefined}>) => {
+export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, readOnlyCode}: EditorProps, ref: ForwardedRef<{getCode: () => string | undefined}>) => {
 
 	const [editor, setEditor] = useState<EditorView | null>(null);
 
 	const editorRef = useRef<HTMLPreElement>(null);
+	
+	const [readOnly, setReadOnly] = useState<Compartment>(new Compartment);
 
 	// Expose editor.state.doc.toString() to the parent component
 	useImperativeHandle<{getCode: () => string | undefined}, {getCode: () => string | undefined}>(ref, () => ({
@@ -36,12 +38,14 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog}:
 		const codeMirrorTheme: CodeMirrorTheme = (language ? THEMES.get(language) : undefined) ?? pythonCodeMirrorTheme;
 		const codeMirrorThemeExtensions = Object.values(codeMirrorTheme).filter(isDefined);
 
+		//Everytime read only code is changed, update editor state
 		setEditor(new EditorView({
 			state: EditorState.create({
 				doc: initCode,
 				extensions: [
 					...codeMirrorThemeExtensions,
 					basicSetup,
+					readOnly.of(EditorState.readOnly.of(readOnlyCode!)),
 					keymap.of([indentWithTab]), // about accessibility: https://codemirror.net/6/examples/tab/
 					history(),
 					EditorView.updateListener.of((v: ViewUpdate) => {
@@ -72,7 +76,7 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog}:
 			}),
 			parent: editorRef.current as HTMLElement
 		}));
-	}, [initCode]);
+	}, [initCode, readOnlyCode]);
 
 	return <pre className="editor" ref={editorRef} />
 });

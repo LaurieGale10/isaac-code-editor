@@ -1,11 +1,11 @@
 import {Button} from "reactstrap";
 import {EXEC_STATE} from "./constants";
 
-interface RunButtonProps {onRun: () => void, onCheck: () => void, running: string, loaded: boolean, showCheckButton?: boolean}
+interface RunButtonProps {onRun: () => void, onCheck: () => void, running: string, loaded: boolean, showCheckButton?: boolean, runButtonDisabled: boolean}
 
-export const RunButtons = ({onRun, onCheck, running, loaded, showCheckButton}: RunButtonProps) => {
+export const RunButtons = ({onRun, onCheck, running, loaded, showCheckButton, runButtonDisabled}: RunButtonProps) => {
 	return <div className={"d-flex justify-content-center mb-3"}>
-		<Button title={"Run code"} className={"run-button mx-2"} color={"secondary text-center"} onClick={onRun} disabled={!loaded || running === EXEC_STATE.CHECKING}>
+		<Button title={"Run code"} className={"run-button mx-2"} color={"secondary text-center"} onClick={onRun} disabled={!loaded || running === EXEC_STATE.CHECKING || runButtonDisabled}>
 			{running === EXEC_STATE.RUNNING ?
 				<svg data-name="Layer 1" id="Layer_1" width="35" height="35" fill="#FFFFFF" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect height="298.98" rx="18.8" width="298.96" x="106.52" y="106.51"/></svg>
 				:

@@ -226,6 +226,10 @@ export const Sandbox = () => {
 		setSnapshotLog((current) => (current.concat([snapshot])));
 	};
 
+	const [runButtonDisabled, setRunButtonDisabled] = useState<boolean>(true);
+
+	const [readOnlyCode, setReadOnlyCode] = useState<boolean>(true);
+
 	// Create a resize observer to update the height of the iframe when containerRef.current changes size
 	useEffect(() => {
 		if (!containerRef.current || !loaded) return;
@@ -285,12 +289,12 @@ export const Sandbox = () => {
 		 *     message: "Congratulations, you passed the test!"
 		 * }
 		 */
+		console.log(receivedData)
 		if (receivedData.type === MESSAGE_TYPES.INITIALISE) {
 			// Stop currently running code (or try to)
 			if (running !== EXEC_STATE.STOPPED) {
 				stopExecution();
 			}
-
 			const newPredefCode = {
 				setup: tryCastString(receivedData?.setup) ?? "",
 				code: tryCastString(receivedData?.code),
@@ -301,7 +305,6 @@ export const Sandbox = () => {
 			}
 			setRecordLogs(receivedData?.logChanges ? receivedData?.logChanges as boolean : false);
 			setPredefinedCode(newPredefCode);
-
 			setIsFullscreen(receivedData?.fullscreen ? receivedData?.fullscreen as boolean : false);
 
 			setLoaded(true);
@@ -339,6 +342,10 @@ export const Sandbox = () => {
 				setChangeLog([]);
 				setSnapshotLog([]);
 			}
+		} else if (receivedData.type === MESSAGE_TYPES.TOGGLE_RUN) {
+			setRunButtonDisabled(receivedData.disableRun as boolean)
+		} else if (receivedData.type === MESSAGE_TYPES.TOGGLE_READ_ONLY_CODE) {
+			setReadOnlyCode(receivedData.readOnlyCode as boolean)
 		}
 	}, [receivedData]);
 
@@ -386,7 +393,12 @@ export const Sandbox = () => {
 			setRunning(doChecks ? EXEC_STATE.CHECKING : EXEC_STATE.RUNNING);
 			const editorCode = codeRef?.current?.getCode() || "";
 			handleRun(xtermInterface(xterm, () => shouldStopExecution(true)), language, editorCode, predefinedCode.setup, predefinedCode.test, predefinedCode.wrapCodeInMain, printFeedback, shouldStopExecution, appendToSnapshotLog, sendCheckerResult, alertSetupCodeFail, doChecks)
-				.then(() => setRunning(EXEC_STATE.STOPPED));
+				.then(() => {
+					sendMessage({
+						type: MESSAGE_TYPES.TOGGLE_RUN
+					});
+					setRunning(EXEC_STATE.STOPPED);
+				});
 		} else {
 			alertSetupCodeFail("Unknown programming language - unable to run code!");
 		}
@@ -432,8 +444,8 @@ export const Sandbox = () => {
 				</>
 			}
 		</>}
-		<Editor initCode={predefinedCode.code} language={predefinedCode.language} ref={codeRef} appendToChangeLog={appendToChangeLog} />
-		<RunButtons running={running} loaded={loaded} onRun={callHandleRun(false)} onCheck={callHandleRun(true)} showCheckButton={!!("test" in predefinedCode && predefinedCode.test)}/>
+		<Editor initCode={predefinedCode.code} language={predefinedCode.language} ref={codeRef} appendToChangeLog={appendToChangeLog} readOnlyCode={readOnlyCode} />
+		<RunButtons running={running} loaded={loaded} onRun={callHandleRun(false)} onCheck={callHandleRun(true)} showCheckButton={!!("test" in predefinedCode && predefinedCode.test)} runButtonDisabled={runButtonDisabled}/>
 		<OutputTerminal setXTerm={setXTerm} hidden={languageIsSQL} />
 		{languageIsSQL && <OutputTable rows={queryOutput.rows} error={queryOutput.error} columnNames={queryOutput.columnNames} message={queryOutput.message} fullscreen={isFullscreen} />}
 	</div>

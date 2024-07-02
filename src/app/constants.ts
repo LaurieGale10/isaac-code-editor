@@ -20,7 +20,9 @@ export const MESSAGE_TYPES = {
     CHECKER: "checker",
     SETUP_FAIL: "setupFail",
     PING: "ping",
-    LOGS: "logs"
+    LOGS: "logs",
+    TOGGLE_RUN: "toggleRun",
+    TOGGLE_READ_ONLY_CODE: "toggleReadOnlyCode" //Could probably be merged into one single message
 }
 
 export const EXEC_STATE = {
