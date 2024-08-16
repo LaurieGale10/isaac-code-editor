@@ -1,5 +1,16 @@
 {
   "projects": {
     "default": "primmdebug"
-  }
+  },
+  "targets": {
+    "primmdebug": {
+      "hosting": {
+        "code-editor": [
+          "primmdebug-code-editor"
+        ]
+      }
+    }
+  },
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
 }
