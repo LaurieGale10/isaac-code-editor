@@ -228,7 +228,7 @@ export const Sandbox = () => {
 
 	const [runButtonDisabled, setRunButtonDisabled] = useState<boolean>(true);
 
-	const [readOnlyCode, setReadOnlyCode] = useState<boolean>(true);
+	const [readOnlyCode, setReadOnlyCode] = useState<boolean>(false);
 
 	// Create a resize observer to update the height of the iframe when containerRef.current changes size
 	useEffect(() => {

@@ -5,10 +5,8 @@ interface RunButtonProps {onRun: () => void, onCheck: () => void, running: strin
 
 export const RunButtons = ({onRun, onCheck, running, loaded, showCheckButton, runButtonDisabled}: RunButtonProps) => {
 	return <div className={"d-flex justify-content-center mb-3"}>
-		<Button title={"Run code"} className={"run-button mx-2"} color={"secondary text-center"} onClick={onRun} disabled={!loaded || running === EXEC_STATE.CHECKING || runButtonDisabled}>
-			{running === EXEC_STATE.RUNNING ?
-				<svg data-name="Layer 1" id="Layer_1" width="35" height="35" fill="#FFFFFF" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect height="298.98" rx="18.8" width="298.96" x="106.52" y="106.51"/></svg>
-				:
+		<Button title={"Run code"} className={"run-button mx-2"} color={"secondary text-center"} onClick={onRun} disabled={!loaded || running === EXEC_STATE.CHECKING || running === EXEC_STATE.RUNNING || runButtonDisabled}>
+			{
 				<svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="#FFFFFF"
 					 className="bi bi-play-fill" viewBox="0 0 16 16">
 					<path
