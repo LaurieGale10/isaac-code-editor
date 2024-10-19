@@ -17,7 +17,7 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 	const [editor, setEditor] = useState<EditorView | null>(null);
 
 	const editorRef = useRef<HTMLPreElement>(null);
-	
+
 	const [readOnly, setReadOnly] = useState<Compartment>(new Compartment);
 
 	// Expose editor.state.doc.toString() to the parent component
@@ -66,7 +66,7 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 						if (changes && annotations && (annotations.length > 0 || changes.length > 1 || typeof changes[0] !== "number")) {
 							appendToChangeLog({
 								changes,
-								timestamp: Date.now(),
+								timestamp: new Date(),
 								annotations,
 								selections: v.state.selection.toJSON().ranges
 							});
@@ -76,7 +76,14 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 			}),
 			parent: editorRef.current as HTMLElement
 		}));
-	}, [initCode, readOnlyCode]);
+	}, [initCode]); //Problem is that this listener is needed for readOnlyCode, but causes code to be reset when readOnlyCode changes
+
+	useEffect(() => {
+		console.log(readOnlyCode)
+		editor?.dispatch({
+			effects: readOnly.reconfigure(EditorState.readOnly.of(readOnlyCode!))
+		});
+	}, [readOnlyCode]); //Dispatches an extension change to the existing editor rather than creating a whole new state
 
 	return <pre className="editor" ref={editorRef} />
 });

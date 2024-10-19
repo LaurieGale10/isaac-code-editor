@@ -60,14 +60,14 @@ export interface EditorChange {
     // - a [number, string], where the number represents the characters removed, and the string is the new characters added
     // A list of these gives a modification to the whole document at a point in "time"
     changes: (number | [number, string])[];
-    timestamp: number;
+    timestamp: Date;
     annotations: string[];
     selections: {anchor: number; head: number}[];
 }
 
 export interface EditorSnapshot {
     snapshot: string;
-    timestamp: number;
+    timestamp: Date;
     compiled: boolean;
     error?: string;
 }

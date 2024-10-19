@@ -157,11 +157,15 @@ const handleRun = (terminal: ITerminal,
 				shouldStopExecution,
 				{retainGlobals: true, execLimit: 30000 /* 30 seconds */})
 				.then((finalOutput) => {
-					logSnapshot({snapshot: code, compiled: true, timestamp: Date.now()});
+					console.log(finalOutput) //Suppose this doesn't catch intermediary UI of the program
+					logSnapshot({snapshot: code, compiled: true, timestamp: new Date()});
+					//Send IO message here
 					return finalOutput;
 				}).catch((e) => {
-					logSnapshot({snapshot: code, compiled: false, timestamp: Date.now(), error: e});
+					console.log(e)
+					logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), error: e});
 					printError(e);
+					//Send IO message here
 				});
 		}
 	} else {
@@ -178,7 +182,8 @@ const handleRun = (terminal: ITerminal,
 					{retainGlobals: true, execLimit: 30000 /* 30 seconds */})
 			})
 			.then((finalOutput) => {
-				logSnapshot({snapshot: code, compiled: true, timestamp: Date.now()});
+				console.log(finalOutput)
+				logSnapshot({snapshot: code, compiled: true, timestamp: new Date()});
 				// Run the tests only if the "Check" button was clicked
 				if (doChecks) {
 					return language.runTests(finalOutput, testInputHandler(language.syncTestInputHander), shouldStopExecution, testCode, testCallbacks)
@@ -188,7 +193,8 @@ const handleRun = (terminal: ITerminal,
 				}
 			})
 			.catch((e) => {
-				logSnapshot({snapshot: code, compiled: false, timestamp: Date.now(), error: e});
+				logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), error: e});
+				console.log(e)
 				printError(e);
 			});
 	}
@@ -226,7 +232,7 @@ export const Sandbox = () => {
 		setSnapshotLog((current) => (current.concat([snapshot])));
 	};
 
-	const [runButtonDisabled, setRunButtonDisabled] = useState<boolean>(true);
+	const [runButtonDisabled, setRunButtonDisabled] = useState<boolean>(false);
 
 	const [readOnlyCode, setReadOnlyCode] = useState<boolean>(false);
 
@@ -289,7 +295,6 @@ export const Sandbox = () => {
 		 *     message: "Congratulations, you passed the test!"
 		 * }
 		 */
-		console.log(receivedData)
 		if (receivedData.type === MESSAGE_TYPES.INITIALISE) {
 			// Stop currently running code (or try to)
 			if (running !== EXEC_STATE.STOPPED) {
@@ -310,7 +315,7 @@ export const Sandbox = () => {
 			setLoaded(true);
 			// Clear any irrelevant log data, and make an initial snapshot
 			setChangeLog([]);
-			setSnapshotLog([{compiled: false, snapshot: newPredefCode.code ?? "", timestamp: Date.now()}]);
+			setSnapshotLog([{compiled: false, snapshot: newPredefCode.code ?? "", timestamp: new Date()}]);
 
 			// Clear any old terminal and table output
 			xterm && xtermInterface(xterm, () => shouldStopExecution(false)).clear();
@@ -393,7 +398,7 @@ export const Sandbox = () => {
 			setRunning(doChecks ? EXEC_STATE.CHECKING : EXEC_STATE.RUNNING);
 			const editorCode = codeRef?.current?.getCode() || "";
 			handleRun(xtermInterface(xterm, () => shouldStopExecution(true)), language, editorCode, predefinedCode.setup, predefinedCode.test, predefinedCode.wrapCodeInMain, printFeedback, shouldStopExecution, appendToSnapshotLog, sendCheckerResult, alertSetupCodeFail, doChecks)
-				.then(() => {
+				.then((data) => {
 					sendMessage({
 						type: MESSAGE_TYPES.TOGGLE_RUN
 					});
