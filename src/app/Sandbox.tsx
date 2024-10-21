@@ -157,12 +157,12 @@ const handleRun = (terminal: ITerminal,
 				shouldStopExecution,
 				{retainGlobals: true, execLimit: 30000 /* 30 seconds */})
 				.then((finalOutput) => {
-					console.log(finalOutput) //Suppose this doesn't catch intermediary UI of the program
+					//console.log(finalOutput) //Suppose this doesn't catch intermediary UI of the program
 					logSnapshot({snapshot: code, compiled: true, timestamp: new Date()});
 					//Send IO message here
 					return finalOutput;
 				}).catch((e) => {
-					console.log(e)
+					//console.log(e)
 					logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), error: e});
 					printError(e);
 					//Send IO message here
@@ -182,7 +182,7 @@ const handleRun = (terminal: ITerminal,
 					{retainGlobals: true, execLimit: 30000 /* 30 seconds */})
 			})
 			.then((finalOutput) => {
-				console.log(finalOutput)
+				//console.log(finalOutput)
 				logSnapshot({snapshot: code, compiled: true, timestamp: new Date()});
 				// Run the tests only if the "Check" button was clicked
 				if (doChecks) {
@@ -194,7 +194,7 @@ const handleRun = (terminal: ITerminal,
 			})
 			.catch((e) => {
 				logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), error: e});
-				console.log(e)
+				//console.log(e)
 				printError(e);
 			});
 	}
