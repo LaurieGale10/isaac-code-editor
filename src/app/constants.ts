@@ -22,7 +22,8 @@ export const MESSAGE_TYPES = {
     PING: "ping",
     LOGS: "logs",
     TOGGLE_RUN: "toggleRun",
-    TOGGLE_READ_ONLY_CODE: "toggleReadOnlyCode" //Could probably be merged into one single message
+    TOGGLE_READ_ONLY_CODE: "toggleReadOnlyCode",
+    PROGRAM_IO: "programIO"
 }
 
 export const EXEC_STATE = {

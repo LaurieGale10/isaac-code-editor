@@ -79,7 +79,6 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 	}, [initCode]); //Problem is that this listener is needed for readOnlyCode, but causes code to be reset when readOnlyCode changes
 
 	useEffect(() => {
-		console.log(readOnlyCode)
 		editor?.dispatch({
 			effects: readOnly.reconfigure(EditorState.readOnly.of(readOnlyCode!))
 		});
