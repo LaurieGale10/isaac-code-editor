@@ -9,6 +9,7 @@ import {CodeMirrorTheme, EditorChange} from "./types";
 import {THEMES} from "./constants";
 import {pythonCodeMirrorTheme} from "./langages/python";
 import {isDefined} from "./services/utils";
+import { Tooltip } from "reactstrap";
 
 interface EditorProps {initCode?: string; language?: string; appendToChangeLog: (change: EditorChange) => void, readOnlyCode?: boolean}
 
@@ -19,6 +20,14 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 	const editorRef = useRef<HTMLPreElement>(null);
 
 	const [readOnly, setReadOnly] = useState<Compartment>(new Compartment);
+
+	const [tooltipOpen, setTooltipOpen] = useState(false);
+
+	const toggle = () => {
+		if (readOnlyCode) {
+			setTooltipOpen(!tooltipOpen);
+		}
+	}
 
 	// Expose editor.state.doc.toString() to the parent component
 	useImperativeHandle<{getCode: () => string | undefined}, {getCode: () => string | undefined}>(ref, () => ({
@@ -84,5 +93,11 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 		});
 	}, [readOnlyCode]); //Dispatches an extension change to the existing editor rather than creating a whole new state
 
-	return <pre className="editor" ref={editorRef} />
+	return <span id="code-editor-span">
+		<pre id="cm-editor" className="editor" ref={editorRef} />
+		<Tooltip target="cm-editor" isOpen={tooltipOpen} toggle={toggle} delay={{"show":500,"hide":0}}>
+			You can only edit the program on the Fix the Error stage.
+		</Tooltip>
+	</span>
+	
 });

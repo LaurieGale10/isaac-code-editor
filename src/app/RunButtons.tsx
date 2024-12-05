@@ -1,19 +1,33 @@
-import {Button} from "reactstrap";
+import {Button, Tooltip, UncontrolledTooltip} from "reactstrap";
 import {EXEC_STATE} from "./constants";
+import { useState } from "react";
 
 interface RunButtonProps {onRun: () => void, onCheck: () => void, running: string, loaded: boolean, showCheckButton?: boolean, runButtonDisabled: boolean}
 
 export const RunButtons = ({onRun, onCheck, running, loaded, showCheckButton, runButtonDisabled}: RunButtonProps) => {
+	const [tooltipOpen, setTooltipOpen] = useState(false);
+
+	const toggle = () => {
+		if (runButtonDisabled) {
+			setTooltipOpen(!tooltipOpen);
+		}
+	}
 	return <div className={"d-flex justify-content-center mb-3"}>
-		<Button title={"Run code"} className={"run-button mx-2"} color={"secondary text-center"} onClick={onRun} disabled={!loaded || running === EXEC_STATE.CHECKING || running === EXEC_STATE.RUNNING || runButtonDisabled}>
-			{
-				<svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="#FFFFFF"
-					 className="bi bi-play-fill" viewBox="0 0 16 16">
-					<path
-						d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
-				</svg>
-			}
-		</Button>
+		<span id="run-button-span">
+			<Button title={"Run code"} className={"run-button mx-2"} color={"secondary text-center"} onClick={onRun} disabled={!loaded || running === EXEC_STATE.CHECKING || running === EXEC_STATE.RUNNING || runButtonDisabled}>
+				{
+					<svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="#FFFFFF"
+						className="bi bi-play-fill" viewBox="0 0 16 16">
+						<path
+							d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+					</svg>
+				}
+			</Button>
+		</span>
+
+		<Tooltip placement="top" target="run-button-span" isOpen={tooltipOpen} toggle={toggle}>
+			Complete the steps on the right first!
+		</Tooltip>
 		{showCheckButton && <Button title={"Test code"} className={"check-button mx-2"} color={"secondary text-center"} onClick={onCheck} disabled={!loaded || running === EXEC_STATE.RUNNING}>
 			{running === EXEC_STATE.CHECKING ?
 				<svg data-name="Layer 1" id="Layer_1" width="35" height="35" fill="#FFFFFF" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect height="298.98" rx="18.8" width="298.96" x="106.52" y="106.51"/></svg>
