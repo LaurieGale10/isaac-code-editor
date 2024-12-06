@@ -2,14 +2,15 @@ import React, {useEffect, useRef} from "react";
 import {Terminal} from "xterm";
 import {FitAddon} from "xterm-addon-fit";
 import {WebglAddon} from "xterm-addon-webgl"
-import {ITerminal} from "./types";
+import {IOEvent, IOType, ITerminal} from "./types";
 import {ERRORS} from "./constants";
+import { IOEventManager } from "./IOEventManager";
 
 /**
  * Handling a single input character to the xterm terminal - will recurse, building up a string
  * output, until CRLF is input.
  */
-const handleSingleInputChar = (xterm: Terminal, input: string, checkExecutionStopped: () => boolean) => new Promise<string>((resolve, reject) => {
+const handleSingleInputChar = (xterm: Terminal, input: string, checkExecutionStopped: () => boolean, ioEvents?: IOEventManager) => new Promise<string>((resolve, reject) => {
 	if (undefined === xterm || checkExecutionStopped()) {
 		return reject(ERRORS.EXEC_STOP_ERROR);
 	}
@@ -22,7 +23,7 @@ const handleSingleInputChar = (xterm: Terminal, input: string, checkExecutionSto
 		// This does the recursive call by cleaning up the old listener and handling the next input
 		const cleanUpAndRecurse = (newInput: string) => {
 			onDataListener.dispose();
-			handleSingleInputChar(xterm, newInput, checkExecutionStopped).then(resolve).catch(reject);
+			handleSingleInputChar(xterm, newInput, checkExecutionStopped, ioEvents).then(resolve).catch(reject);
 		}
 		switch (s) {
 			case '\u0003': // Ctrl+C
@@ -46,6 +47,9 @@ const handleSingleInputChar = (xterm: Terminal, input: string, checkExecutionSto
 			case '\r': // Enter
 				onDataListener.dispose();
 				xterm.write("\r\n");
+				if (ioEvents) {
+					ioEvents.addLine(input, IOType.input);
+				}
 				resolve(input);
 				return;
 			case '\n': // Enter (don't handle second character generated)
@@ -70,9 +74,14 @@ const handleSingleInputChar = (xterm: Terminal, input: string, checkExecutionSto
 	});
 });
 
-export const xtermInterface: (xterm: Terminal, checkExecutionStopped: () => boolean) => ITerminal = (xterm, checkExecutionStopped) => ({
-	input: () => handleSingleInputChar(xterm,"", checkExecutionStopped),
-	output: (output: string) => xterm.write(output.replace(/\n/g, "\r\n")),
+export const xtermInterface: (xterm: Terminal, checkExecutionStopped: () => boolean, ioEvents?: IOEventManager) => ITerminal = (xterm, checkExecutionStopped, ioEvents?: IOEventManager) => ({
+	input: () => handleSingleInputChar(xterm,"", checkExecutionStopped, ioEvents),
+	output: (output: string) => {
+		if (ioEvents) {
+			ioEvents.addLine(output, IOType.output);
+		}
+		xterm.write(output.replace(/\n/g, "\r\n"))
+	},
 	clear: () => {
 		xterm.write('\x1bc');
 		xterm.clear();
@@ -118,7 +127,6 @@ export const OutputTerminal = ({setXTerm, hidden}: OutputTerminalProps) => {
 		});
 		setXTerm(newTerm);
 		newTerm.open(xtermDiv.current);
-
 		let isWebglEnabled = false;
 		try {
 			newTerm.loadAddon(new WebglAddon());

@@ -143,7 +143,7 @@ const runCode = (code: string, printOutput: (output: string) => void, handleInpu
 			}
 		}
 	).then(() => {
-		resolve(finalOutput);
+		resolve(finalOutput); //Resolve IOEvents here?
 	}).catch((err: any) => {
 		if (typeof err === "object" && "nativeError" in err && err.nativeError === ERRORS.EXEC_STOP_ERROR) {
 			reject({error: "Execution interrupted"});

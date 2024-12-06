@@ -69,5 +69,17 @@ export interface EditorSnapshot {
     snapshot: string;
     timestamp: Date;
     compiled: boolean;
-    error?: string;
+    io?: IOEvent[]
+}
+
+export interface IOEvent {
+    text: string,
+    type: IOType,
+    time: Date,
+}
+
+export enum IOType {
+    input = "input",
+    output = "output",
+    error = "error"
 }

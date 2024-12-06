@@ -12,14 +12,16 @@ import {
 	LANGUAGES,
 	MESSAGE_TYPES
 } from "./constants";
-import {ITerminal, TestCallbacks, Feedback, PredefinedCode, ILanguage, EditorChange, EditorSnapshot} from "./types";
+import {ITerminal, TestCallbacks, Feedback, PredefinedCode, ILanguage, EditorChange, EditorSnapshot, IOType} from "./types";
 import classNames from "classnames";
 import {runQuery} from "./langages/sql";
 import {OutputTable} from "./OutputTable";
 import {Button} from "reactstrap";
+import { IOEventManager } from "./IOEventManager";
 
 const terminalInitialText = "Ada Code Editor - running Skulpt in xterm.js:\n";
 const uid = window.location.hash.substring(1);
+const ioEvents: IOEventManager = new IOEventManager();
 
 const handleRun = (terminal: ITerminal,
 				   language: ILanguage,
@@ -150,22 +152,21 @@ const handleRun = (terminal: ITerminal,
 					onTestFinish(checkerResult);
 				}).catch(printError);
 		} else {
-			return language.runCode(
+			return language.runCode(  //TODO: Add logging here as well
 				bundledCode,
 				terminal.output,
 				terminal.input,
 				shouldStopExecution,
 				{retainGlobals: true, execLimit: 30000 /* 30 seconds */})
 				.then((finalOutput) => {
-					//console.log(finalOutput) //Suppose this doesn't catch intermediary UI of the program
-					logSnapshot({snapshot: code, compiled: true, timestamp: new Date()});
-					//Send IO message here
+					logSnapshot({snapshot: code, compiled: true, timestamp: new Date(), io: ioEvents.getIOEvents() ?? undefined});
+					ioEvents.clearEvents();
 					return finalOutput;
 				}).catch((e) => {
-					//console.log(e)
-					logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), error: e});
+					e["error"] ? ioEvents.addLine(e["error"], IOType.error) : ioEvents.addLine(e, IOType.error)
+					logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), io: ioEvents.getIOEvents() ?? undefined});
+					ioEvents.clearEvents();
 					printError(e);
-					//Send IO message here
 				});
 		}
 	} else {
@@ -181,9 +182,9 @@ const handleRun = (terminal: ITerminal,
 					shouldStopExecution,
 					{retainGlobals: true, execLimit: 30000 /* 30 seconds */})
 			})
-			.then((finalOutput) => {
-				//console.log(finalOutput)
-				logSnapshot({snapshot: code, compiled: true, timestamp: new Date()});
+			.then((finalOutput) => { //Needs to be have set of logs outputted as well here, without tampering with final output (although I don't actually need final output at the moment)
+				logSnapshot({snapshot: code, compiled: true, timestamp: new Date(), io: ioEvents.getIOEvents() ?? undefined});
+				ioEvents.clearEvents();
 				// Run the tests only if the "Check" button was clicked
 				if (doChecks) {
 					return language.runTests(finalOutput, testInputHandler(language.syncTestInputHander), shouldStopExecution, testCode, testCallbacks)
@@ -193,8 +194,9 @@ const handleRun = (terminal: ITerminal,
 				}
 			})
 			.catch((e) => {
-				logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), error: e});
-				//console.log(e)
+				e["error"] ? ioEvents.addLine(e["error"], IOType.error) : ioEvents.addLine(e, IOType.error)
+				logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), io: ioEvents.getIOEvents() ?? undefined});
+				ioEvents.clearEvents();
 				printError(e);
 			});
 	}
@@ -315,7 +317,7 @@ export const Sandbox = () => {
 			setLoaded(true);
 			// Clear any irrelevant log data, and make an initial snapshot
 			setChangeLog([]);
-			setSnapshotLog([{compiled: false, snapshot: newPredefCode.code ?? "", timestamp: new Date()}]);
+			setSnapshotLog([]);
 
 			// Clear any old terminal and table output
 			xterm && xtermInterface(xterm, () => shouldStopExecution(false)).clear();
@@ -365,7 +367,7 @@ export const Sandbox = () => {
 
 	// Dependant on xterm character encoding - will need changing for a different terminal
 	const printFeedback = ({succeeded, message, isTest}: Feedback) => {
-		xterm && xtermInterface(xterm, () => shouldStopExecution(true)).output(`\x1b[${succeeded ? "32" : "31"};1m` + (isTest ? "> " : "") + message + (succeeded && isTest ? " \u2714" : "") + "\x1b[0m\r\n")
+		xterm && xtermInterface(xterm, () => shouldStopExecution(true), ioEvents).output(`\x1b[${succeeded ? "32" : "31"};1m` + (isTest ? "> " : "") + message + (succeeded && isTest ? " \u2714" : "") + "\x1b[0m\r\n")
 	}
 
 	// The main entry point for running code. It is called by the run button.
@@ -397,7 +399,7 @@ export const Sandbox = () => {
 		if (language) {
 			setRunning(doChecks ? EXEC_STATE.CHECKING : EXEC_STATE.RUNNING);
 			const editorCode = codeRef?.current?.getCode() || "";
-			handleRun(xtermInterface(xterm, () => shouldStopExecution(true)), language, editorCode, predefinedCode.setup, predefinedCode.test, predefinedCode.wrapCodeInMain, printFeedback, shouldStopExecution, appendToSnapshotLog, sendCheckerResult, alertSetupCodeFail, doChecks)
+			handleRun(xtermInterface(xterm, () => shouldStopExecution(true), ioEvents), language, editorCode, predefinedCode.setup, predefinedCode.test, predefinedCode.wrapCodeInMain, printFeedback, shouldStopExecution, appendToSnapshotLog, sendCheckerResult, alertSetupCodeFail, doChecks)
 				.then((data) => {
 					sendMessage({
 						type: MESSAGE_TYPES.TOGGLE_RUN
