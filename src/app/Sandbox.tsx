@@ -100,8 +100,6 @@ const handleRun = (terminal: ITerminal,
 		},
 		runCurrentTest: (currentOutput: string, allInputsMustBeUsed?: boolean, successMessage?: string, failMessage?: string) => {
 			if (outputRegex) {
-				//console.log(outputRegex);
-				//console.log(currentOutput);
 				if (!outputRegex.test(currentOutput)) {
 					// If the output does not match the provided regex
 					return {error: failMessage ?? "Your program produced unexpected output...", isTestError: true};

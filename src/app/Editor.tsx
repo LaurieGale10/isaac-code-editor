@@ -95,7 +95,7 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 
 	return <span id="code-editor-span">
 		<pre id="cm-editor" className="editor" ref={editorRef} />
-		<Tooltip target="cm-editor" isOpen={tooltipOpen} toggle={toggle} delay={{"show":500,"hide":0}}>
+		<Tooltip target="cm-editor" isOpen={tooltipOpen} toggle={toggle} delay={{"show":750,"hide":100}}>
 			You can only edit the program on the Fix the Error stage.
 		</Tooltip>
 	</span>

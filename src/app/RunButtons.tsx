@@ -25,7 +25,7 @@ export const RunButtons = ({onRun, onCheck, running, loaded, showCheckButton, ru
 			</Button>
 		</span>
 
-		<Tooltip placement="top" target="run-button-span" isOpen={tooltipOpen} toggle={toggle}>
+		<Tooltip placement="top" target="run-button-span" isOpen={tooltipOpen} toggle={toggle} delay={{"show":100,"hide":0}}>
 			Complete the steps on the right first!
 		</Tooltip>
 		{showCheckButton && <Button title={"Test code"} className={"check-button mx-2"} color={"secondary text-center"} onClick={onCheck} disabled={!loaded || running === EXEC_STATE.RUNNING}>
