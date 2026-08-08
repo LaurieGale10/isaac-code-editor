@@ -90,7 +90,7 @@ const handleRun = (terminal: ITerminal,
 		}
 	}
 
-	const testCallbacks: TestCallbacks = {
+	const testCallbacks: TestCallbacks = { //This seems like the function where the testing is taking place by checking output matches a regex and number of inputs required in program is correct. How does this relate to monkey patching in Python?
 		setTestInputs: (inputs: string[] | undefined) => {
 			reversedInputs = inputs?.reduce((acc: string[], x) => [x].concat(acc), []) ?? [];
 			inputCount = reversedInputs.length;
@@ -98,8 +98,8 @@ const handleRun = (terminal: ITerminal,
 		setTestRegex: (re: string | undefined) => {
 			outputRegex = re ? RegExp(re) : undefined;
 		},
-		runCurrentTest: (currentOutput: string, allInputsMustBeUsed?: boolean, successMessage?: string, failMessage?: string) => {
-			if (outputRegex) {
+		runCurrentTest: (currentOutput: string, allInputsMustBeUsed?: boolean, successMessage?: string, failMessage?: string) => { //Function passed into python.runTests as callback
+			if (outputRegex) { //Uses regex set by setTestRegex to check output of program is correct?
 				if (!outputRegex.test(currentOutput)) {
 					// If the output does not match the provided regex
 					return {error: failMessage ?? "Your program produced unexpected output...", isTestError: true};
@@ -180,11 +180,11 @@ const handleRun = (terminal: ITerminal,
 					shouldStopExecution,
 					{retainGlobals: true, execLimit: 30000 /* 30 seconds */})
 			})
-			.then((finalOutput) => { //Needs to be have set of logs outputted as well here, without tampering with final output (although I don't actually need final output at the moment)
+			.then((finalOutput) => {
 				logSnapshot({snapshot: code, compiled: true, timestamp: new Date(), io: ioEvents.getIOEvents() ?? undefined});
 				ioEvents.clearEvents();
 				// Run the tests only if the "Check" button was clicked
-				if (doChecks) {
+				if (doChecks) { //This is where Python test logic is called (syncTestInputHander = false)
 					return language.runTests(finalOutput, testInputHandler(language.syncTestInputHander), shouldStopExecution, testCode, testCallbacks)
 						.then((checkerResult: string) => {
 							onTestFinish(checkerResult);
@@ -196,7 +196,8 @@ const handleRun = (terminal: ITerminal,
 				logSnapshot({snapshot: code, compiled: false, timestamp: new Date(), io: ioEvents.getIOEvents() ?? undefined});
 				ioEvents.clearEvents();
 				printError(e);
-			});
+			})
+			//Clear events in finally clause
 	}
 };
 
@@ -396,6 +397,9 @@ export const Sandbox = () => {
 		const language = LANGUAGES.get(predefinedCode?.language ?? "");
 		if (language) {
 			setRunning(doChecks ? EXEC_STATE.CHECKING : EXEC_STATE.RUNNING);
+			sendMessage({
+				type:MESSAGE_TYPES.RUN_BUTTON_PRESSED
+			});
 			const editorCode = codeRef?.current?.getCode() || "";
 			handleRun(xtermInterface(xterm, () => shouldStopExecution(true), ioEvents), language, editorCode, predefinedCode.setup, predefinedCode.test, predefinedCode.wrapCodeInMain, printFeedback, shouldStopExecution, appendToSnapshotLog, sendCheckerResult, alertSetupCodeFail, doChecks)
 				.then((data) => {
