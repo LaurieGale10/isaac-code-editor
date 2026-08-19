@@ -173,6 +173,15 @@ function runSetupCode(printOutput: (output: string) => void, handleInput: () => 
 	}
 }
 
+/**
+ * 
+ * @param output 
+ * @param handleInput Callback to Sanbox.testInputHandler(false); does this check whether program inputs when it's not supposed to
+ * @param shouldStopExecution 
+ * @param testCode String of code to test?
+ * @param testCallbacks Callback functions that are used to run tests?: TestCallbacks (interface of three functions: setTestInputs, setTestRegex, runCurrentTest (only one that returns anything))
+ * @returns 
+ */
 function runTests(output: string, handleInput: () => (Promise<string> | string), shouldStopExecution: (stop: boolean) => boolean, testCode?: string, testCallbacks?: TestCallbacks) {
 	if (testCode) {
 		return runCode(testCode, noop, handleInput, shouldStopExecution, {retainGlobals: true}, testCallbacks, output).then((testOutput) => {

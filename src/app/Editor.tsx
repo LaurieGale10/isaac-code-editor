@@ -6,10 +6,12 @@ import {Transaction, Compartment} from "@codemirror/state";
 import {indentWithTab} from "@codemirror/commands";
 import {history} from "@codemirror/history";
 import {CodeMirrorTheme, EditorChange} from "./types";
-import {THEMES} from "./constants";
+import {MESSAGE_TYPES, THEMES} from "./constants";
 import {pythonCodeMirrorTheme} from "./langages/python";
-import {isDefined} from "./services/utils";
+import {isDefined, useIFrameMessages} from "./services/utils";
 import { Tooltip } from "reactstrap";
+
+const uid = window.location.hash.substring(1);
 
 interface EditorProps {initCode?: string; language?: string; appendToChangeLog: (change: EditorChange) => void, readOnlyCode?: boolean}
 
@@ -22,6 +24,9 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 	const [readOnly, setReadOnly] = useState<Compartment>(new Compartment);
 
 	const [tooltipOpen, setTooltipOpen] = useState(false);
+
+	const {receivedData, sendMessage} = useIFrameMessages(uid);
+	
 
 	const toggle = () => {
 		if (readOnlyCode) {
@@ -79,6 +84,14 @@ export const Editor = React.forwardRef(({initCode, language, appendToChangeLog, 
 								annotations,
 								selections: v.state.selection.toJSON().ranges
 							});
+
+						}
+						//Send message to parent component if user changes the program (for change detection in Fix the Error).
+						if (v.docChanged) {
+							sendMessage({
+								type: MESSAGE_TYPES.PROGRAM_EDITED,
+								data: v.state.doc.toString()
+							})
 						}
 					})
 				]

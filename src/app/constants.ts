@@ -24,6 +24,7 @@ export const MESSAGE_TYPES = {
     TOGGLE_RUN: "toggleRun",
     TOGGLE_READ_ONLY_CODE: "toggleReadOnlyCode",
     RUN_BUTTON_PRESSED: "runButtonPressed",
+    PROGRAM_EDITED: "programEdited",
     PROGRAM_IO: "programIO"
 }
 
